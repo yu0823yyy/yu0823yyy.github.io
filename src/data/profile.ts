@@ -1,52 +1,42 @@
-// =============================================================
-// ✏️ ここを書き換えるだけでサイト全体の内容が変わります
-//    （プロジェクトは src/content/projects/ に .md を追加）
-// =============================================================
-
 export const profile = {
-  name: 'あなたの名前',
-  nameEn: 'Your Name',
-  // 例: 「〇〇大学 情報工学科 3年」
-  affiliation: '〇〇大学 〇〇学部 〇年',
-  // トップに出る一言（キャッチコピー）
-  tagline: 'アルゴリズムと機械学習が好きな学生エンジニアです。',
-  // About欄の自己紹介（段落ごとに配列で）
+  name: '藤村優',
+  nameEn: 'Yu Fujimura',
+  affiliation: '釧路工業高等専門学校 3年情報工学分野',
+  tagline: '数学，アルゴリズム，AI/LLMが好きな大学編入を目指す学生です．',
   about: [
-    'ここに自己紹介を書きます。何に興味があって、どんなことをしてきたかを2〜3文で。',
-    'インターンで挑戦したいこと・身につけたいことも書くと、採用担当に伝わりやすくなります。',
+    '',
   ],
   // アバター画像: public/ に画像を置いて '/avatar.jpg' のように指定。空なら頭文字を表示
   avatar: '',
-  location: '東京',
-  email: 'you@example.com',
+  location: '釧路',
+  email: 'tengcunyou28@gmail.com',
 };
 
 // 空文字のリンクは表示されません
 export const links = {
-  github: 'https://github.com/YOUR-GITHUB-USERNAME',
+  github: 'https://github.com/yu0823yyy',
   x: '',
   wantedly: '',
-  atcoder: '',
-  kaggle: '',
-  zenn: '',
+  atcoder: 'https://atcoder.jp/users/yu_0823',
 };
 
 export const skills: { category: string; items: string[] }[] = [
-  { category: '言語', items: ['C++', 'Python', 'TypeScript'] },
-  { category: '機械学習', items: ['PyTorch', 'scikit-learn', 'LightGBM'] },
-  { category: 'Web / その他', items: ['Astro', 'Git / GitHub', 'Linux'] },
+  { category: '言語', items: ['C++', 'Python'] },
+  { category: '数学', items: ['Linear Algebra', 'Calculus'] },
+  { category: 'Web / その他', items: ['Git / GitHub'] },
 ];
 
-// 経歴（新しい順に書くのがおすすめ）
-export const timeline: { period: string; title: string; detail?: string }[] = [
-  { period: '2024.04 – 現在', title: '〇〇大学 〇〇学部', detail: '〇〇研究室 / 〇〇を専攻' },
-  { period: '2023.xx', title: '〇〇を始める', detail: 'きっかけや取り組んだことを一言で' },
-  { period: '2021.04 – 2024.03', title: '〇〇高校' },
+export const timeline: { period: string; title: string;}[] = [
+  { period: '2024.04', title: '釧路工業高等専門学校 入学'},
+  { period: '2024.10', title: 'U16プログラミングコンテスト釧路大会 優勝' },
+  { period: '2024.11', title: 'U16プログラミングコンテスト北海道大会 第3位' },
+  { period: '2025.10', title: 'AtCoder Algorithm 初参加' },
+  { period: '2026.05', title: 'TOEIC 605点取得' },
+  { period: '2026.10', title: '全国高専プログラミングコンテスト競技部門 第7位' },
+  { period: '2026.11', title: '基本情報技術者試験 合格' },
+  { period: '2026.11 - 現在', title: 'TOEIC, LLM, 数学を学び続けています' },
 ];
 
-// 実績・数字（レーティングやコンペ順位など）
 export const achievements: { label: string; value: string; note?: string }[] = [
-  { label: 'AtCoder (Algorithm)', value: '— ', note: '最高レート' },
-  { label: 'AtCoder (Heuristic)', value: '— ', note: '最高レート' },
-  { label: 'Kaggle', value: '— ', note: '最高順位 / メダル' },
+  { label: 'AtCoder (Algorithm)', value: '506', note: '最高レート: 506(2026.11.14時点)' },
 ];
