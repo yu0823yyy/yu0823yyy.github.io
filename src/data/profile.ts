@@ -3,7 +3,7 @@ export const profile = {
   nameEn: 'Yu Fujimura',
   pronouns: 'he/him',
   affiliation: '釧路工業高等専門学校 情報工学分野 3年',
-  tagline: 'Mathematics/AI/LLM/Algorithm/DeepLeaning',
+  tagline: 'Mathematics/AI/LLM/Algorithm/DeepLearning',
   about: [
     '数学好きな大学編入を目指している高専生です. \n競技プログラミングやLLMの勉強にも取り組んでいます. \n将来はLLMに関する基礎研究をしたいと考えています.',
   ],
