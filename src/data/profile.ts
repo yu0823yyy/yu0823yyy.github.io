@@ -1,5 +1,5 @@
 export const profile = {
-  name: '藤村優',
+  name: '藤村 優',
   nameEn: 'Yu Fujimura',
   pronouns: 'he/him',
   affiliation: '釧路工業高等専門学校 情報工学分野 3年',

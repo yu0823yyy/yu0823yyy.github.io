@@ -1,0 +1,186 @@
+---
+// 全結合ニューラルネットワーク（MLP）
+interface Props {
+  layers?: number[];
+}
+const { layers = [4, 6, 6, 3] } = Astro.props;
+---
+<canvas class="nn-bg" data-layers={layers.join(',')} aria-hidden="true"></canvas>
+
+<style>
+  .nn-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  function setup(canvas: HTMLCanvasElement) {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const host = canvas.parentElement as HTMLElement;
+    const layers = (canvas.dataset.layers || '4,6,6,3').split(',').map(Number);
+    const L = layers.length;
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // 再現性のある疑似乱数
+    let seed = 7;
+    const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+
+    // 重み（層 l の i → 層 l+1 の j）
+    const W: number[][][] = [];
+    for (let l = 0; l < L - 1; l++) {
+      W.push(Array.from({ length: layers[l] }, () => Array.from({ length: layers[l + 1] }, () => rand() * 2 - 1)));
+    }
+    const phase = layers.map((n) => Array.from({ length: n }, () => rand() * Math.PI * 2));
+
+    // 1回の順伝播ごとに変わる「活性値」
+    const hash = (a: number, b: number) => {
+      const s = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453;
+      return s - Math.floor(s);
+    };
+
+    let w = 0, h = 0, dpr = 1, lastT = 0;
+    let accent = '#2f5bea';
+    const neg = '#a26bff';
+    function readColor() {
+      accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || accent;
+    }
+    readColor();
+    new MutationObserver(readColor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readColor(); draw(lastT); });
+
+    function rgba(hex: string, a: number) {
+      const m = hex.replace('#', '');
+      const full = m.length === 3 ? m.split('').map((c) => c + c).join('') : m;
+      const v = parseInt(full, 16);
+      return `rgba(${(v >> 16) & 255},${(v >> 8) & 255},${v & 255},${Math.max(0, Math.min(1, a))})`;
+    }
+
+    let mouse: { x: number; y: number } | null = null;
+    host.addEventListener('pointermove', (e) => {
+      const r = host.getBoundingClientRect();
+      mouse = { x: e.clientX - r.left, y: e.clientY - r.top };
+    });
+    host.addEventListener('pointerleave', () => { mouse = null; });
+
+    const PERIOD = 2600; // 1回の順伝播にかける時間(ms)
+
+    function draw(t: number) {
+      if (!ctx || !w) return;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      const wide = w > 760;
+      const fade = wide ? 1 : 0.7;
+      // 描画エリア
+      const x0 = wide ? w * 0.6 : w * 0.46;
+      const x1 = wide ? Math.min(w * 0.94, x0 + 420) : w * 0.94;
+      const cy = wide ? h * 0.5 : h * 0.24;
+      const gap = wide ? Math.min(h * 0.12, 54) : Math.min(h * 0.07, 30);
+      const maxN = Math.max(...layers);
+
+      // ニューロンの座標（ふわっと上下に揺れる）
+      const pos = layers.map((n, l) =>
+        Array.from({ length: n }, (_, i) => ({
+          x: x0 + ((x1 - x0) * l) / (L - 1),
+          y: cy + (i - (n - 1) / 2) * gap * (maxN / Math.max(n, maxN * 0.75)) * 0.9
+            + (reduceMotion ? 0 : Math.sin(t * 0.0012 + phase[l][i]) * 2.5),
+        })),
+      );
+
+      // 順伝播の進み具合 p: 0 → L-1
+      const cycle = Math.floor(t / PERIOD);
+      const p = reduceMotion ? -10 : ((t % PERIOD) / PERIOD) * (L - 1 + 0.8) - 0.2;
+
+      // マウスに一番近いニューロン
+      let hot: [number, number] | null = null;
+      if (mouse) {
+        let best = 40 * 40;
+        pos.forEach((col, l) => col.forEach((q, i) => {
+          const d = (q.x - mouse!.x) ** 2 + (q.y - mouse!.y) ** 2;
+          if (d < best) { best = d; hot = [l, i]; }
+        }));
+      }
+      const isHot = (l: number, i: number) => hot !== null && hot[0] === l && hot[1] === i;
+
+      // 辺
+      for (let l = 0; l < L - 1; l++) {
+        for (let i = 0; i < layers[l]; i++) {
+          for (let j = 0; j < layers[l + 1]; j++) {
+            const wt = W[l][i][j];
+            const a = pos[l][i], b = pos[l + 1][j];
+            const lit = isHot(l, i) || isHot(l + 1, j);
+            const color = wt >= 0 ? accent : neg;
+            ctx.strokeStyle = rgba(color, (lit ? 0.8 : 0.05 + Math.abs(wt) * 0.2) * fade);
+            ctx.lineWidth = lit ? 1.6 : 0.6 + Math.abs(wt) * 0.9;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+
+            // 信号の粒（重みが大きい辺だけ）
+            const f = p - l;
+            if (f > 0 && f < 1 && Math.abs(wt) > 0.45) {
+              const e = f * f * (3 - 2 * f); // smoothstep
+              const sx = a.x + (b.x - a.x) * e;
+              const sy = a.y + (b.y - a.y) * e;
+              ctx.fillStyle = rgba(color, (0.4 + Math.abs(wt) * 0.6) * fade);
+              ctx.beginPath();
+              ctx.arc(sx, sy, 1.6 + Math.abs(wt) * 1.2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+      }
+
+      // ニューロン
+      pos.forEach((col, l) => col.forEach((q, i) => {
+        const act = hash(cycle * 31 + l, i);                    // この順伝播での活性値
+        const arrive = Math.max(0, 1 - Math.abs(p - l) * 1.6);  // 信号が届いた瞬間に光る
+        const glow = arrive * (0.35 + act * 0.65);
+        const r = (wide ? 5 : 4) * (isHot(l, i) ? 1.5 : 1);
+
+        if (glow > 0.02) {
+          const g = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, r * 4);
+          g.addColorStop(0, rgba(accent, 0.45 * glow * fade));
+          g.addColorStop(1, rgba(accent, 0));
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(q.x, q.y, r * 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = rgba(accent, (0.55 + glow * 0.45) * fade);
+        ctx.beginPath();
+        ctx.arc(q.x, q.y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }));
+    }
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = host.clientWidth;
+      h = host.clientHeight;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      draw(lastT);
+    }
+    resize();
+    new ResizeObserver(resize).observe(host);
+    if (reduceMotion) return;
+
+    let visible = true;
+    new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(host);
+    function loop(t: number) {
+      if (visible) { lastT = t; draw(t); }
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  }
+
+  document.querySelectorAll<HTMLCanvasElement>('canvas.nn-bg').forEach(setup);
+</script>

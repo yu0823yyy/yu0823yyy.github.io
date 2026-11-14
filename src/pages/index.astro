@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import ProjectCard from '../components/ProjectCard.astro';
+import NeuralNetBackground from '../components/NeuralNetBackground.astro';
 import { getCollection } from 'astro:content';
 import { profile, links, skills, timeline, achievements } from '../data/profile';
 
@@ -19,6 +20,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 <Base>
   <!-- Hero -->
   <section class="hero">
+    <NeuralNetBackground layers={[9, 7, 3, 7, 9]} />
+    <p class="formula" aria-hidden="true">
+      a<sup>(l+1)</sup> = σ(W<sup>(l)</sup>a<sup>(l)</sup> + b<sup>(l)</sup>)
+      <span class="arch">9 → 7 → 3 → 7 → 9</span>
+    </p>
     <div class="container hero-inner">
       <div class="avatar">
         {profile.avatar ? <img src={`${base}${profile.avatar}`} alt={profile.name} /> : <span>{profile.nameEn.slice(0, 1)}</span>}
@@ -118,8 +124,16 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 </Base>
 
 <style>
-  .hero { padding: 96px 0 80px; }
-  .hero-inner { display: flex; align-items: center; gap: 40px; }
+  .hero { position: relative; overflow: hidden; padding: 120px 0 112px; }
+  .hero-inner { position: relative; z-index: 1; display: flex; align-items: center; gap: 40px; }
+  .formula {
+    position: absolute; z-index: 1; right: max(16px, calc((100% - 960px) / 2)); bottom: 20px; margin: 0;
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.78rem; color: var(--muted); display: flex; align-items: center; gap: 6px;
+    font-style: italic; letter-spacing: 0.02em;
+  }
+  .formula sup { font-size: 0.68em; }
+  .formula .arch { margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--border); font-style: normal; }
   .avatar {
     flex: none; width: 132px; height: 132px; border-radius: 50%; overflow: hidden;
     background: linear-gradient(135deg, var(--accent), #8a5cf6);
@@ -134,7 +148,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     margin-left: 10px; padding: 1px 8px; border: 1px solid var(--border); border-radius: 999px;
     font-size: 0.78rem; vertical-align: middle;
   }
-  .tagline { margin: 0 0 20px; font-size: 1.08rem; }
+  .tagline { margin: 0 0 20px; font-size: 1.08rem; overflow-wrap: anywhere; }
   .links { display: flex; flex-wrap: wrap; gap: 8px; }
   .pill {
     font-size: 0.85rem; padding: 6px 14px; border-radius: 999px;
@@ -142,7 +156,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   }
   .pill:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
   @media (max-width: 640px) {
-    .hero { padding: 56px 0; }
+    .hero { padding: 64px 0 80px; }
+    .formula { left: 16px; right: auto; }
     .hero-inner { flex-direction: column; align-items: flex-start; gap: 24px; }
     .avatar { width: 96px; height: 96px; }
   }
