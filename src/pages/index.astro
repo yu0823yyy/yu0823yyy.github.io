@@ -1,0 +1,182 @@
+---
+import Base from '../layouts/Base.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { getCollection } from 'astro:content';
+import { profile, links, skills, timeline, achievements } from '../data/profile';
+
+const projects = (await getCollection('projects')).sort(
+  (a, b) =>
+    Number(b.data.featured) - Number(a.data.featured) ||
+    b.data.date.getTime() - a.data.date.getTime(),
+);
+
+const linkLabels: Record<string, string> = {
+  github: 'GitHub', x: 'X', wantedly: 'Wantedly', atcoder: 'AtCoder', kaggle: 'Kaggle', zenn: 'Zenn',
+};
+const activeLinks = Object.entries(links).filter(([, url]) => url);
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<Base>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="avatar">
+        {profile.avatar ? <img src={`${base}${profile.avatar}`} alt={profile.name} /> : <span>{profile.nameEn.slice(0, 1)}</span>}
+      </div>
+      <div>
+        <p class="affiliation">{profile.affiliation}</p>
+        <h1>{profile.name}<small>{profile.nameEn}</small></h1>
+        <p class="tagline">{profile.tagline}</p>
+        <div class="links">
+          {activeLinks.map(([k, url]) => <a class="pill" href={url} target="_blank" rel="noopener">{linkLabels[k] ?? k}</a>)}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section id="about">
+    <div class="container two-col">
+      <div>
+        <h2 class="section-title">About</h2>
+        <h3 class="section-heading">自己紹介</h3>
+        {profile.about.map((p) => <p>{p}</p>)}
+      </div>
+      <div>
+        <h2 class="section-title">Skills</h2>
+        <h3 class="section-heading">スキル</h3>
+        <dl class="skills">
+          {skills.map((s) => (
+            <div>
+              <dt>{s.category}</dt>
+              <dd>{s.items.map((i) => <span class="tag">{i}</span>)}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- Achievements -->
+  {achievements.length > 0 && (
+    <section id="achievements">
+      <div class="container">
+        <h2 class="section-title">Achievements</h2>
+        <h3 class="section-heading">実績</h3>
+        <div class="stats">
+          {achievements.map((a) => (
+            <div class="stat">
+              <div class="stat-value">{a.value}</div>
+              <div class="stat-label">{a.label}</div>
+              {a.note && <div class="stat-note">{a.note}</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Experience -->
+  <section id="experience">
+    <div class="container">
+      <h2 class="section-title">Experience</h2>
+      <h3 class="section-heading">経歴</h3>
+      <ol class="timeline">
+        {timeline.map((t) => (
+          <li>
+            <span class="period">{t.period}</span>
+            <div>
+              <strong>{t.title}</strong>
+              {t.detail && <p>{t.detail}</p>}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- Projects -->
+  <section id="projects">
+    <div class="container">
+      <h2 class="section-title">Projects</h2>
+      <h3 class="section-heading">ポートフォリオ</h3>
+      <div class="grid">
+        {projects.map((p) => <ProjectCard id={p.id} {...p.data} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact">
+    <div class="container contact">
+      <h2 class="section-title">Contact</h2>
+      <h3 class="section-heading">お気軽にご連絡ください</h3>
+      <p>インターン・共同開発のお誘いなど歓迎です。</p>
+      <a class="btn" href={`mailto:${profile.email}`}>{profile.email}</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero { padding: 96px 0 80px; }
+  .hero-inner { display: flex; align-items: center; gap: 40px; }
+  .avatar {
+    flex: none; width: 132px; height: 132px; border-radius: 50%; overflow: hidden;
+    background: linear-gradient(135deg, var(--accent), #8a5cf6);
+    display: grid; place-items: center; box-shadow: var(--shadow);
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar span { color: #fff; font-size: 3rem; font-weight: 700; }
+  .affiliation { margin: 0; color: var(--muted); font-size: 0.92rem; }
+  h1 { margin: 4px 0 10px; font-size: clamp(2rem, 5vw, 2.8rem); line-height: 1.25; letter-spacing: -0.02em; }
+  h1 small { display: block; font-size: 1rem; font-weight: 500; color: var(--muted); letter-spacing: 0.02em; }
+  .tagline { margin: 0 0 20px; font-size: 1.08rem; }
+  .links { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill {
+    font-size: 0.85rem; padding: 6px 14px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  }
+  .pill:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+  @media (max-width: 640px) {
+    .hero { padding: 56px 0; }
+    .hero-inner { flex-direction: column; align-items: flex-start; gap: 24px; }
+    .avatar { width: 96px; height: 96px; }
+  }
+
+  .two-col { display: grid; grid-template-columns: 1.2fr 1fr; gap: 56px; }
+  @media (max-width: 760px) { .two-col { grid-template-columns: 1fr; gap: 48px; } }
+  .two-col p { margin: 0 0 1em; }
+
+  .skills { margin: 0; display: grid; gap: 18px; }
+  .skills dt { font-size: 0.82rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+  .skills dd { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px 24px; box-shadow: var(--shadow);
+  }
+  .stat-value { font-size: 2rem; font-weight: 700; color: var(--accent); line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .stat-label { font-weight: 600; margin-top: 6px; }
+  .stat-note { color: var(--muted); font-size: 0.82rem; }
+
+  .timeline { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--border); }
+  .timeline li { position: relative; display: grid; grid-template-columns: 180px 1fr; gap: 16px; padding: 0 0 28px 28px; }
+  .timeline li::before {
+    content: ''; position: absolute; left: -7px; top: 8px; width: 12px; height: 12px;
+    border-radius: 50%; background: var(--accent); border: 3px solid var(--bg);
+  }
+  .timeline .period { color: var(--muted); font-size: 0.88rem; font-variant-numeric: tabular-nums; padding-top: 2px; }
+  .timeline p { margin: 2px 0 0; color: var(--muted); font-size: 0.92rem; }
+  @media (max-width: 600px) { .timeline li { grid-template-columns: 1fr; gap: 2px; } }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 20px; }
+
+  .contact { text-align: center; }
+  .contact p { color: var(--muted); margin: -12px 0 24px; }
+  .btn {
+    display: inline-block; background: var(--accent); color: #fff; padding: 12px 28px;
+    border-radius: 999px; font-weight: 600;
+  }
+  .btn:hover { text-decoration: none; opacity: 0.9; }
+</style>

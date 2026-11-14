@@ -1,0 +1,50 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((p) => ({ params: { id: p.id }, props: { project: p } }));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+const d = project.data;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<Base title={d.title} description={d.summary}>
+  <article class="container article">
+    <a class="back" href={`${base}/#projects`}>← Projects に戻る</a>
+    <h1>{d.title}</h1>
+    <p class="summary">{d.summary}</p>
+    <div class="meta">
+      <time>{d.date.getFullYear()}.{String(d.date.getMonth() + 1).padStart(2, '0')}</time>
+      {d.tags.map((t) => <span class="tag">{t}</span>)}
+    </div>
+    {(d.repo || d.demo) && (
+      <div class="actions">
+        {d.repo && <a href={d.repo} target="_blank" rel="noopener">GitHub リポジトリ ↗</a>}
+        {d.demo && <a href={d.demo} target="_blank" rel="noopener">デモを見る ↗</a>}
+      </div>
+    )}
+    {d.image && <img class="cover" src={`${base}${d.image}`} alt="" />}
+    <div class="prose"><Content /></div>
+  </article>
+</Base>
+
+<style>
+  .article { max-width: 760px; padding: 56px 0 80px; }
+  .back { font-size: 0.88rem; color: var(--muted); }
+  h1 { margin: 20px 0 8px; font-size: clamp(1.7rem, 4vw, 2.3rem); line-height: 1.35; letter-spacing: -0.01em; }
+  .summary { color: var(--muted); margin: 0 0 16px; font-size: 1.05rem; }
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .meta time { color: var(--muted); font-size: 0.85rem; margin-right: 4px; }
+  .actions { display: flex; gap: 20px; margin-top: 18px; font-weight: 600; font-size: 0.92rem; }
+  .cover { margin: 32px 0 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  .prose { margin-top: 40px; }
+  .prose :global(h2) { font-size: 1.25rem; margin: 2em 0 0.6em; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .prose :global(code) { background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; font-size: 0.9em; }
+  .prose :global(pre) { padding: 16px; border-radius: 10px; overflow-x: auto; }
+  .prose :global(pre code) { background: none; padding: 0; }
+  .prose :global(img) { border-radius: 10px; margin: 1.5em 0; }
+</style>
